@@ -29,7 +29,7 @@ namespace Megalovania
         public Soul(int size, bool canToggleModes = false)
         {
             canSwitchModes = canToggleModes;
-            Texture = new Texture(@"C:\Users\TreeMusketeers\Pictures\Heart.png", size);
+            Texture = new Texture(/*@"C:\Users\TreeMusketeers\Pictures\Heart.png"*/@"C:\Users\Peter.Husman\Pictures\Soul.png", size);
             HitBox = new HitBox {Size = new Vector2(Texture.GetLength(0), Texture.GetLength(1))}; //Vector2.UnitX * 9 + Vector2.UnitY * 9 };
         }
 

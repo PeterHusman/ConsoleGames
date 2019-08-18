@@ -18,7 +18,7 @@ namespace Megalovania
             int karma = 0;
             Console.BackgroundColor = ConsoleColor.Black;
             World world = new World(40, 200, 200);
-            Soul s = new Soul(6) {Position = new Vector2((Console.WindowWidth >> 1) - 5, (Console.WindowHeight) - 5), Mode = SoulMode.Blue };
+            Soul s = new Soul(7) {Position = new Vector2((Console.WindowWidth >> 1) - 5, (Console.WindowHeight) - 5), Mode = SoulMode.Blue };
             int healthWidth = Console.WindowWidth - 40;
             ProgressBar healthBar = new ProgressBar(healthWidth, 10, ConsoleColor.Red, ConsoleColor.Yellow)
                 {Position = new Vector2((Console.WindowWidth - healthWidth) >> 1, 0)};
@@ -27,9 +27,10 @@ namespace Megalovania
             }.Union(bones).ToArray();
             int maxHealth = 100;
             int currHealth = 100;
-
+#if PlaySong
             SoundPlayer megalovania = new SoundPlayer("meg.wav");
             megalovania.PlayLooping();
+#endif
             /*var reader = new Mp3FileReader(@"C:\Users\TreeMusketeers\Music\Toby Fox - Megalovania.mp3");
             var bitsPerSample = reader.Mp3WaveFormat.BitsPerSample;
             byte[] bytes = new byte[reader.Length];
@@ -79,7 +80,9 @@ namespace Megalovania
                         Console.SetCursorPosition(Console.WindowWidth / 2 - 1, Console.WindowHeight / 2);
                         Console.BackgroundColor = ConsoleColor.Red;
                         Console.Write("  ");
+#if PlaySong
                         megalovania.Stop();
+#endif
                         break;
                     }
                 }

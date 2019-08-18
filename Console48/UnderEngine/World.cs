@@ -22,19 +22,23 @@ namespace UnderEngine
 
         private HashSet<Vector2> pointsToRedraw = new HashSet<Vector2>(new VectorEqualityComparer());
 
-        public World(TimeSpan timePerFrame, int width, int height)
+        public World(TimeSpan timePerFrame, int width, int height, bool setConsoleSettings = true)
         {
             TimePerFrame = timePerFrame;
 
             ScreenBuffer = new ConsoleColor[width, height];
             Width = width;
             Height = height;
-            Console.BufferHeight = Console.WindowHeight = height / 2;
-            Console.BufferWidth = Console.WindowWidth = width;
-            Console.CursorVisible = false;
+
+            if (setConsoleSettings)
+            {
+                Console.BufferHeight = Console.WindowHeight = height / 2;
+                Console.BufferWidth = Console.WindowWidth = width;
+                Console.CursorVisible = false;
+            }
         }
 
-        public World(float fps, int width, int height) : this(TimeSpan.FromSeconds(1 / fps), width, height)
+        public World(float fps, int width, int height, bool setConsoleSettings = true) : this(TimeSpan.FromSeconds(1 / fps), width, height, setConsoleSettings)
         {
 
         }
@@ -57,22 +61,14 @@ namespace UnderEngine
             }
         }
 
-        public void UpdateAndDraw()
+        public void Update(TimeSpan elapsed)
         {
-            TimeSpan elapsed = stopwatch.Elapsed;
-            stopwatch.Restart();
-            //HashSet<Vector2> pointsToRedraw = new HashSet<Vector2>(new VectorEqualityComparer());
-            //for (int i = 0; i < Objects.Length; i++)
-            //{
-            //    Objects[i].Update();
-            //    pointsToRedraw.UnionWith(Objects[i].RedrawPositions);
-            //}
-
-            //Next, please fix this brokenness. Each object should know the World and the object should tell the World which points to redraw in that phase of the World's Update.
-
             foreach (ObjectBase obj in Objects)
             {
-                obj.Update(elapsed);
+                if (obj.HitBox.Enabled)
+                {
+                    obj.Update(elapsed);
+                }
                 if (!((int)obj.HitBox.Position.X == (int)obj.OldHitBox.Position.X &&
                       (int)obj.HitBox.Position.Y == (int)obj.OldHitBox.Position.Y &&
                       (int)obj.HitBox.Size.X == (int)obj.OldHitBox.Size.X &&
@@ -84,62 +80,60 @@ namespace UnderEngine
 
                 obj.OldHitBox = obj.HitBox.Copy;
             }
+        }
+
+        public TimeSpan UpdateAndDraw()
+        {
+            TimeSpan elapsed = stopwatch.Elapsed;
+            stopwatch.Restart();
+
+
+            Update(elapsed);
 
             if (renderTimer.Elapsed >= TimePerFrame || !renderTimer.IsRunning)
             {
-                HashSet<Vector2> actuallyPleaseDontDrawThese = new HashSet<Vector2>(new VectorEqualityComparer());
-#if DebugPrint
-                int numOfNewPixels = 0;
-#endif
-                foreach (Vector2 pos in pointsToRedraw)
-                {
-                    ConsoleColor color = CalcColor(pos);
-
-                    
-
-                    if (pos.X >= 0 && pos.Y >= 0 && pos.X < Width && pos.Y < Height && color != ScreenBuffer[(int)pos.X, (int)pos.Y] && !actuallyPleaseDontDrawThese.Contains(pos))
-                    {
-#if DebugPrint
-                        numOfNewPixels++;
-#endif
-                        Console.SetCursorPosition(pos.X < 0 ? 0 : (int)pos.X, pos.Y < 0 ? 0 : ((int)pos.Y >> 1));
-
-                        Vector2 matchingPoint = GetPairedPoint(pos);
-
-                        ConsoleColor color2 = FindColor(matchingPoint);
-                        actuallyPleaseDontDrawThese.Add(matchingPoint);
-
-                        if (((int) pos.Y & 1) == 0)
-                        {
-                            Console.BackgroundColor = color2;
-                            Console.ForegroundColor = color;
-                        }
-                        else
-                        {
-                            Console.BackgroundColor = color;
-                            Console.ForegroundColor = color2;
-                        }
-
-                        Console.Write('▀');
-
-                        ScreenBuffer[(int)pos.X, (int)pos.Y] = color;
-                    }
-                }
-
-#if DebugPrint
-                Console.BackgroundColor = ConsoleColor.Black;
-
-                Console.SetCursorPosition(0, 0);
-                Console.Write("        ");
-                Console.SetCursorPosition(0, 0);
-                Console.Write(numOfNewPixels);
-
-#endif
-
-                pointsToRedraw.Clear();
-
+                Draw();
                 renderTimer.Restart();
             }
+            return elapsed;
+        }
+
+        public void Draw()
+        {
+            HashSet<Vector2> actuallyPleaseDontDrawThese = new HashSet<Vector2>(new VectorEqualityComparer());
+            foreach (Vector2 pos in pointsToRedraw)
+            {
+                ConsoleColor color = CalcColor(pos);
+
+
+
+                if (pos.X >= 0 && pos.Y >= 0 && pos.X < Width && pos.Y < Height && color != ScreenBuffer[(int)pos.X, (int)pos.Y] && !actuallyPleaseDontDrawThese.Contains(pos))
+                {
+                    Console.SetCursorPosition(pos.X < 0 ? 0 : (int)pos.X, pos.Y < 0 ? 0 : ((int)pos.Y >> 1));
+
+                    Vector2 matchingPoint = GetPairedPoint(pos);
+
+                    ConsoleColor color2 = FindColor(matchingPoint);
+                    actuallyPleaseDontDrawThese.Add(matchingPoint);
+
+                    if (((int)pos.Y & 1) == 0)
+                    {
+                        Console.BackgroundColor = color2;
+                        Console.ForegroundColor = color;
+                    }
+                    else
+                    {
+                        Console.BackgroundColor = color;
+                        Console.ForegroundColor = color2;
+                    }
+
+                    Console.Write('▀');
+
+                    ScreenBuffer[(int)pos.X, (int)pos.Y] = color;
+                }
+            }
+
+            pointsToRedraw.Clear();
         }
 
         private ConsoleColor FindColor(Vector2 pos)
