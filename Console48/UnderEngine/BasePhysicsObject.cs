@@ -12,7 +12,11 @@ namespace UnderEngine
 
         public float Mass { get; set; }
 
-        public bool Enabled { get; set; }
+        public bool Enabled
+        {
+            get => HitBox.Enabled;
+            set => HitBox.Enabled = value;
+        }
 
         private HitBox oldHB = new HitBox();
 
